@@ -24,7 +24,10 @@
   },
   "homepage": "https://github.com/Eyob-smax/k8s-demo#readme",
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
     "dotenv": "^17.2.3",
+    "drizzle-kit": "^0.31.8",
+    "drizzle-orm": "^0.45.1",
     "express": "^5.2.1"
   },
   "devDependencies": {
@@ -38,6 +41,7 @@
     "nodemon": "^3.1.11",
     "prettier": "^3.7.4",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }

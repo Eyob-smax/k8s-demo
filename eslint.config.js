@@ -37,7 +37,7 @@ export default [
       "no-return-await": "error",
       "no-useless-catch": "error",
 
-      "prettier/prettier": "error",
+      "prettier/prettier": "warn",
     },
 
     plugins: {

@@ -1,0 +1,2 @@
+{"level":"info","message":"Health check endpoint called","service":"user-service","timestamp":"2026-01-06 16:22:43"}
+{"level":"info","message":"::ffff:127.0.0.1 - - [06/Jan/2026:13:22:43 +0000] \"GET / HTTP/1.1\" 304 - \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0\"","service":"user-service","timestamp":"2026-01-06 16:22:43"}

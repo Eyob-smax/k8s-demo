@@ -1,0 +1,46 @@
+-- -- Current sql file was generated after introspecting the database
+-- -- If you want to run this migration please uncomment this code before executing migrations
+
+-- CREATE TABLE "_prisma_migrations" (
+-- 	"id" varchar(36) PRIMARY KEY NOT NULL,
+-- 	"checksum" varchar(64) NOT NULL,
+-- 	"finished_at" timestamp with time zone,
+-- 	"migration_name" varchar(255) NOT NULL,
+-- 	"logs" text,
+-- 	"rolled_back_at" timestamp with time zone,
+-- 	"started_at" timestamp with time zone DEFAULT now() NOT NULL,
+-- 	"applied_steps_count" integer DEFAULT 0 NOT NULL
+-- );
+-- CREATE TABLE "Message" (
+-- 	"id" serial PRIMARY KEY NOT NULL,
+-- 	"name" text,
+-- 	"email" text,
+-- 	"subject" text,
+-- 	"message" text NOT NULL,
+-- 	"createdAt" timestamp(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+-- );
+-- --> statement-breakpoint
+-- CREATE TABLE "Post" (
+-- 	"id" serial PRIMARY KEY NOT NULL,
+-- 	"post" text NOT NULL,
+-- 	"post_link" text,
+-- 	"date_string" text NOT NULL,
+-- 	"createdAt" timestamp(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
+-- 	"updatedAt" timestamp(3) NOT NULL,
+-- 	"date" timestamp(3) NOT NULL
+-- );
+-- --> statement-breakpoint
+-- CREATE TABLE "Tag" (
+-- 	"id" serial PRIMARY KEY NOT NULL,
+-- 	"tag" text NOT NULL
+-- );
+-- --> statement-breakpoint
+-- CREATE TABLE "PostTag" (
+-- 	"postId" integer NOT NULL,
+-- 	"tagId" integer NOT NULL,
+-- 	CONSTRAINT "PostTag_pkey" PRIMARY KEY("postId","tagId")
+-- );
+-- --> statement-breakpoint
+-- ALTER TABLE "PostTag" ADD CONSTRAINT "PostTag_postId_fkey" FOREIGN KEY ("postId") REFERENCES "public"."Post"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+-- ALTER TABLE "PostTag" ADD CONSTRAINT "PostTag_tagId_fkey" FOREIGN KEY ("tagId") REFERENCES "public"."Tag"("id") ON DELETE restrict ON UPDATE cascade;--> statement-breakpoint
+-- CREATE UNIQUE INDEX "Tag_tag_key" ON "Tag" USING btree ("tag" text_ops);

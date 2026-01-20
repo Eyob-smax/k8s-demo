@@ -6,6 +6,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 export const app = express();
 
+import authRoutes from "./routes/auth.routes.js";
+
 // cluster-example.js
 
 app.use(express.json());
@@ -43,4 +45,4 @@ app.get("/api", (req, res) => {
   });
 });
 
-app.use("/api/auth", (await import("./routes/auth.routes.js")).default);
+app.use("/api/auth", authRoutes);

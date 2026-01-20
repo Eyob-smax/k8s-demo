@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon  dist/index.js",
-    "start": "ts-node  src/index.ts",
+    "dev": "nodemon  dist/src/index.js",
+    "start": "ts-node  src/src/index.ts",
+    "build": "tsc",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "lint": "eslint ./src/**.ts",
@@ -31,6 +32,7 @@
   "homepage": "https://github.com/Eyob-smax/k8s-demo#readme",
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
+    "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -44,6 +46,7 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

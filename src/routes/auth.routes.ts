@@ -1,31 +1,11 @@
 import express from "express";
+import { signin, signout, signup } from "../controller/auth.controller.js";
 const router = express.Router();
 
-router.post("/sign-up", async (req, res) => {
-  try {
-    res.status(201).json({ message: "User signed up successfully" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
+router.post("/sign-up", signup);
 
-router.post("/sign-in", async (req, res) => {
-  try {
-    res.status(200).json({ message: "User signed in successfully" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
+router.post("/sign-in", signin);
 
-router.post("/sign-out", async (req, res) => {
-  try {
-    res.status(200).json({ message: "User signed out successfully" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
+router.post("/sign-out", signout);
 
 export default router;

@@ -1,0 +1,112 @@
+name: Lint and Format
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+jobs:
+  lint-and-format:
+    name: ESLint & Prettier Check
+    runs-on: ubuntu-latest
+
+    steps:
+      # ============================================
+      # CHECKOUT
+      # ============================================
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📋 Log checkout info
+        run: |
+          echo "✅ Repository checked out successfully"
+          echo "📁 Current directory: $(pwd)"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "📝 Commit SHA: ${{ github.sha }}"
+
+      # ============================================
+      # NODE.JS SETUP
+      # ============================================
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: 📋 Log Node.js version
+        run: |
+          echo "✅ Node.js setup complete"
+          echo "📦 Node version: $(node --version)"
+          echo "📦 npm version: $(npm --version)"
+
+      # ============================================
+      # DEPENDENCIES
+      # ============================================
+      - name: 📦 Install dependencies
+        run: |
+          echo "📥 Installing dependencies with npm ci..."
+          npm ci
+          echo "✅ Dependencies installed successfully"
+
+      # ============================================
+      # ESLINT CHECK
+      # ============================================
+      - name: 🔍 Run ESLint
+        id: eslint
+        run: |
+          echo "🔍 Running ESLint to check for code quality issues..."
+          echo "📁 Checking files in ./src/"
+          npm run lint
+          echo "✅ ESLint check passed - no issues found"
+
+      - name: 💡 ESLint fix suggestion
+        if: failure() && steps.eslint.outcome == 'failure'
+        run: |
+          echo "❌ ESLint found issues in your code"
+          echo "💡 To fix automatically, run: npm run lint:fix"
+          echo "📖 Review the errors above and fix them before committing"
+
+      # ============================================
+      # PRETTIER CHECK
+      # ============================================
+      - name: 🎨 Run Prettier format check
+        id: prettier
+        run: |
+          echo "🎨 Running Prettier to check code formatting..."
+          npm run format:check
+          echo "✅ Prettier check passed - code is properly formatted"
+
+      - name: 💡 Prettier fix suggestion
+        if: failure() && steps.prettier.outcome == 'failure'
+        run: |
+          echo "❌ Prettier found formatting issues"
+          echo "💡 To fix automatically, run: npm run format"
+          echo "📖 This will reformat your code according to project standards"
+
+      # ============================================
+      # SUMMARY
+      # ============================================
+      - name: 📊 Generate summary
+        if: always()
+        run: |
+          echo "## 🔍 Lint & Format Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ESLint | ${{ steps.eslint.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Prettier | ${{ steps.prettier.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 💡 Quick Fixes" >> $GITHUB_STEP_SUMMARY
+          echo "- **ESLint issues:** \`npm run lint:fix\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Formatting issues:** \`npm run format\`" >> $GITHUB_STEP_SUMMARY
+
+      # ============================================
+      # ANNOTATIONS
+      # ============================================
+      - name: ❌ Annotate failures
+        if: failure()
+        run: |
+          echo "::error::Lint or format check failed. Please run 'npm run lint:fix' and 'npm run format' locally before pushing."

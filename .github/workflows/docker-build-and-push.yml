@@ -1,0 +1,183 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag_suffix:
+        description: "Optional tag suffix (e.g., hotfix, beta)"
+        required: false
+        default: ""
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/k8s-demo
+
+jobs:
+  build-and-push:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      # ============================================
+      # CHECKOUT
+      # ============================================
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📋 Log checkout info
+        run: |
+          echo "✅ Repository checked out successfully"
+          echo "📁 Current directory: $(pwd)"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "📝 Commit SHA: ${{ github.sha }}"
+          echo "🔧 Trigger: ${{ github.event_name }}"
+
+      # ============================================
+      # DOCKER BUILDX SETUP
+      # ============================================
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
+      - name: 📋 Log Buildx info
+        run: |
+          echo "✅ Docker Buildx configured"
+          echo "🔧 Buildx version:"
+          docker buildx version
+          echo "🖥️ Available platforms:"
+          docker buildx inspect --bootstrap | grep -i platforms || true
+
+      # ============================================
+      # QEMU FOR MULTI-PLATFORM
+      # ============================================
+      - name: 🔧 Set up QEMU for multi-platform builds
+        uses: docker/setup-qemu-action@v3
+
+      - name: 📋 Log QEMU setup
+        run: |
+          echo "✅ QEMU configured for multi-platform builds"
+          echo "🖥️ Supported platforms: linux/amd64, linux/arm64"
+
+      # ============================================
+      # DOCKER HUB LOGIN
+      # ============================================
+      - name: 🔐 Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 📋 Log Docker Hub login
+        run: |
+          echo "✅ Successfully authenticated with Docker Hub"
+          echo "👤 Username: ${{ secrets.DOCKER_USERNAME }}"
+
+      # ============================================
+      # METADATA EXTRACTION
+      # ============================================
+      - name: 🏷️ Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            # Branch name
+            type=ref,event=branch
+            # latest tag for main branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            # Short SHA
+            type=sha,prefix=sha-,format=short
+            # Timestamp tag: prod-YYYYMMDD-HHmmss
+            type=raw,value=prod-{{date 'YYYYMMDD-HHmmss'}},enable=${{ github.ref == 'refs/heads/main' }}
+            # Custom suffix if provided via workflow_dispatch
+            type=raw,value=${{ github.event.inputs.tag_suffix }},enable=${{ github.event.inputs.tag_suffix != '' }}
+
+      - name: 📋 Log generated tags
+        run: |
+          echo "🏷️ Docker image tags that will be created:"
+          echo "${{ steps.meta.outputs.tags }}"
+          echo ""
+          echo "📝 Labels:"
+          echo "${{ steps.meta.outputs.labels }}"
+
+      # ============================================
+      # BUILD AND PUSH
+      # ============================================
+      - name: 🏗️ Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: production
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+
+      - name: 📋 Log build completion
+        run: |
+          echo "✅ Docker image built and pushed successfully"
+          echo "🔑 Image digest: ${{ steps.build.outputs.digest }}"
+          echo "🆔 Image ID: ${{ steps.build.outputs.imageid }}"
+
+      # ============================================
+      # VERIFICATION
+      # ============================================
+      - name: 🔍 Verify pushed image
+        run: |
+          echo "🔍 Verifying pushed image..."
+          echo "📦 Image: ${{ env.IMAGE_NAME }}"
+          echo "🔑 Digest: ${{ steps.build.outputs.digest }}"
+          docker buildx imagetools inspect ${{ env.IMAGE_NAME }}:latest || true
+
+      # ============================================
+      # SUMMARY
+      # ============================================
+      - name: 📊 Generate summary
+        if: always()
+        run: |
+          echo "## 🐳 Docker Build & Push Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | ${{ steps.build.outcome == 'success' && '✅ Success' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Image | \`${{ env.IMAGE_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Digest | \`${{ steps.build.outputs.digest }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Platforms | linux/amd64, linux/arm64 |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🏷️ Tags" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Pull Commands" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      # ============================================
+      # ANNOTATIONS
+      # ============================================
+      - name: ❌ Annotate failures
+        if: failure()
+        run: |
+          echo "::error::Docker build or push failed. Check the logs above for details."
+          echo "💡 Common issues:"
+          echo "   - Invalid Dockerfile syntax"
+          echo "   - Missing DOCKER_USERNAME or DOCKER_PASSWORD secrets"
+          echo "   - Network issues connecting to Docker Hub"

@@ -1,0 +1,44 @@
+# Dependencies
+node_modules
+npm-debug.log
+
+# Build output (for development image we rebuild inside container)
+dist
+
+# Environment files (secrets should not be in image)
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Testing
+coverage
+*.test.ts
+*.spec.ts
+jest.config.ts
+tsconfig.spec.json
+
+# Documentation
+README.md
+WARP.md
+*.md
+
+# Logs
+log
+*.log
+
+# Docker files (not needed in container)
+Dockerfile
+docker-compose*.yml
+
+# Neon Local metadata
+.neon_local

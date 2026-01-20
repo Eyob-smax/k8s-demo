@@ -1,3 +1,18 @@
 node_modules
 dist
+
+# Environment files (contain secrets)
 .env
+.env.development
+.env.production
+.env.local
+
+# Neon Local metadata
+.neon_local/
+
+# Logs
+log/
+*.log
+
+# Coverage
+coverage/
